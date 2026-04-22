@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta name="monetag" content="dfa561cceb8197f9797d101ec0eb6f89">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Ace of WWI</title>
+<link rel="icon" href="sprites/icono.png" type="image/png">
+<style>
+* { box-sizing: border-box; }
+body { 
+  margin: 0; padding: 0; 
+  font-family: 'Courier New', monospace; 
+  background: #f5f5dc; 
+  color: #000; 
+  overflow: hidden;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 24px, rgba(0,0,0,0.03) 24px, rgba(0,0,0,0.03) 25px),
+    repeating-linear-gradient(90deg, transparent, transparent 24px, rgba(0,0,0,0.03) 24px, rgba(0,0,0,0.03) 25px);
+}
+
+button { 
+  background: #fff; 
+  color: #000; 
+  border: 2px dashed #000; 
+  padding: 8px 16px; 
+  margin: 5px; 
+  border-radius: 5px; 
+  cursor: pointer; 
+  font-weight: bold; 
+  font-family: 'Courier New', monospace;
+  transition: all 0.2s;
+}
+button:hover { background: #333; color: #fff; }
+button:active { transform: scale(0.95); }
+
+.menu, #game-over, #achievements-menu { 
+  position: absolute; 
+  top: 50%; left: 50%; 
+  transform: translate(-50%, -50%); 
+  text-align: center; 
+  border: 3px dashed #000; 
+  padding: 25px; 
+  background: #fff; 
+  z-index: 100;
+  box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.menu h1, #game-over h1 { font-size: 24px; margin-bottom: 15px; letter-spacing: 2px; }
+.menu h5 { margin: 5px 0; font-style: italic; }
+.menu img { width: 80px; margin-bottom: 10px; }
+
+#game-container { 
+  display: none; 
+  position: relative; 
+  width: 100vw; 
+  height: 100vh; 
+  background: #f5f5dc;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 24px, rgba(0,0,0,0.02) 24px, rgba(0,0,0,0.02) 25px),
+    repeating-linear-gradient(90deg, transparent, transparent 24px, rgba(0,0,0,0.02) 24px, rgba(0,0,0,0.02) 25px);
+}
+
+canvas { display: block; margin: 0 auto; background: transparent; }
+
+#score { 
+  position: absolute; 
+  top: 10px; left: 10px; 
+  font-size: 16px; 
+  background: rgba(255,255,255,0.9); 
+  padding: 8px 12px; 
+  border-radius: 5px; 
+  border: 2px dashed #000; 
+  color: #000;
+  z-index: 50;
+}
+
+#pause-menu { 
+  display: none; 
+  position: absolute; 
+  top: 50%; left: 50%; 
+  transform: translate(-50%, -50%); 
+  border: 3px dashed #000; 
+  background: #fff; 
+  padding: 25px; 
+  text-align: center; 
+  z-index: 200;
+  min-width: 280px;
+}
+#pause-menu h2 { margin-top: 0; }
+#pause-menu label { display: block; margin: 10px 0; font-size: 14px; }
+#pause-menu input[type="range"] { width: 150px; margin-left: 10px; }
+
+#game-over { display: none; }
+
+#ammoHUD { 
+  z-index: 30; 
+  position: absolute; 
+  top: 10px; right: 10px; 
+  display: block;
+  border: 2px dashed #000;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.8);
+}
+
+#achievements-menu { display: none; max-width: 90vw; }
+#achievements-list { 
+  max-height: 300px; 
+  overflow-y: auto; 
+  text-align: left; 
+  padding: 10px;
+  border: 1px dashed #ccc;
+  margin: 10px 0;
+}
+.achievement-item { 
+  padding: 8px; 
+  margin: 5px 0; 
+  border: 1px dashed #000; 
+  background: #f9f9f9;
+  font-size: 12px;
+}
+.achievement-item.locked { opacity: 0.5; background: #eee; }
+.achievement-item.unlocked { background: #d4edda; }
+
+#touch-controls { 
+  z-index: 150; 
+  position: absolute; 
+  bottom: 20px; 
+  width: 100%; 
+  display: none; 
+  justify-content: space-between; 
+  padding: 0 15px;
+  pointer-events: none;
+}
+#touch-controls button { 
+  width: 70px; 
+  height: 70px; 
+  font-size: 28px; 
+  border-radius: 50%; 
+  opacity: 0.8;
+  pointer-events: auto;
+  border: 3px solid #000;
+}
+#touch-controls .touch-group { display: flex; gap: 10px; }
+
+#alert-overlay {
+  display: none;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 40;
+}
+
+select { 
+  font-family: 'Courier New', monospace; 
+  padding: 5px; 
+  border: 2px dashed #000;
+  background: #fff;
+  margin: 5px;
+}
+
+.volume-control { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 10px; 
+  margin: 8px 0;
+  font-size: 14px;
+}
+.volume-control input { width: 100px; }
+
+#secret-input { 
+  position: absolute; 
+  opacity: 0; 
+  pointer-events: none;
+}
+
+@media (max-width: 768px) { 
+  #touch-controls { display: flex !important; }
+  .menu, #game-over, #pause-menu, #achievements-menu { 
+    width: 90%; 
+    padding: 15px;
+  }
+  .menu h1 { font-size: 18px; }
+  button { padding: 10px 15px; font-size: 14px; }
+}
+
+@media (pointer: coarse) {
+  #touch-controls { display: flex !important; }
+}
+
+/* Mobile device detection - will be overridden by JS */
+.mobile-device #touch-controls { 
+  display: flex !important; 
+}
+
+@media (max-width: 768px) { 
+  .menu, #game-over, #pause-menu, #achievements-menu { 
+    width: 90%; 
+    padding: 15px;
+  }
+  .menu h1 { font-size: 18px; }
+  button { padding: 10px 15px; font-size: 14px; }
+}
+</style>
+</head>
+<body>
+
+<input type="text" id="secret-input" autocomplete="off">
+
+<div class="menu" id="menu">
+  <h5>Molten in...</h5>
+  <h1>THE ACE OF THE WW1</h1>
+  <img id="menu-character" src="sprites/personaje.png" alt="Personaje"><br>
+  <button id="startBtn">Play</button>
+  <button id="achievementsBtn">Achievements</button>
+  <br>
+  <select id="musicSelect">
+    <option value="off">Music: OFF</option>
+  </select>
+  <div class="volume-control">
+    <span>Vol:</span>
+    <input type="range" id="menuMusicVolume" min="0" max="100" value="70">
+  </div>
+  <p>High score: <span id="best-score">0</span></p>
+  <div id="menu-rankings" style="margin:10px 0; padding:10px; border:1px dashed #999; font-size:11px; max-height:120px; overflow-y:auto; text-align:left;">
+    <strong>World Rankings:</strong><br>
+    <span id="menu-rankings-list">Loading...</span>
+  </div>
+  <p style="font-size:12px;">[←][→] Move | [SPACE] Shoot | [ESC] Pause</p>
+  <p style="font-size:10px; color:#666;">Touch controls on mobile</p>
+</div>
+
+<div id="achievements-menu">
+  <h2>Achievements</h2>
+  <div id="achievements-list"></div>
+  <button id="closeAchievementsBtn">Close</button>
+</div>
+
+<div id="game-container"> 
+  <canvas id="gameCanvas"></canvas>
+  <div id="score">Score: 0 | Time: 3:00</div>
+  <div id="alert-overlay"></div>
+  
+  <div id="pause-menu">
+    <h2>⏸ PAUSE ⏸</h2>
+    <div class="volume-control">
+      <span>Music:</span>
+      <input type="range" id="pauseMusicVolume" min="0" max="100" value="70">
+    </div>
+    <div class="volume-control">
+      <span>SFX:</span>
+      <input type="range" id="pauseSfxVolume" min="0" max="100" value="50">
+    </div>
+    <br>
+    <button id="resumeBtn">Resume</button>
+    <button class="menuBtn">Menu</button>
+  </div>
+  
+  <canvas id="ammoHUD"></canvas>
+  
+  <div id="touch-controls">
+    <div class="touch-group">
+      <button id="leftBtn">◀</button>
+      <button id="rightBtn">▶</button>
+    </div>
+    <button id="pauseBtn">⏸</button>
+    <button id="shootBtn">●</button>
+  </div>
+</div>
+
+<div id="game-over">
+  <h1>✈ Game Over ✈</h1>
+  <p>Score: <span id="final-score">0</span></p>
+  <p>Time survived: <span id="final-time">0</span>s</p>
+  <p>New achievements: <span id="new-achievements">0</span></p>
+  <input type="text" id="player-name" placeholder="Your name" maxlength="15" style="padding:8px; border:2px dashed #000; font-family:inherit;">
+  <br>
+  <button id="submitScoreBtn">Submit Score</button>
+  <button id="restartBtn2">Retry</button>
+  <button class="menuBtn">Menu</button>
+  <div id="ranking-display" style="margin-top:15px; font-size:12px; max-height:150px; overflow-y:auto;"></div>
+</div>
+
+<audio id="music" loop></audio>
+<audio id="shootSound" src="sounds/shoot.mp3" preload="auto"></audio>
+<audio id="explosionSound" src="sounds/explosion.mp3" preload="auto"></audio>
+<audio id="zigzagSound" src="sounds/zigzag.mp3" preload="auto"></audio>
+<audio id="enemyDestroySound" src="sounds/enemy_destroy.mp3" preload="auto"></audio>
+<audio id="bonusSound" src="sounds/bonus.mp3" preload="auto"></audio>
+<audio id="alertSound" src="sounds/alert.mp3" preload="auto"></audio>
+
+<script>
+/* ===== CONFIGURACION DE LOGROS (15 logros, hasta 8000 puntos) ===== */
+const ACHIEVEMENTS_CONFIG = [
+  { id: "Rookie", score: 100, song: "sounds/runrabbit.mp3", songName: "Run Rabbit" },
+  { id: "Hunter", score: 500, song: "sounds/tonight.mp3", songName: "Tonight, You Belong to Me" },
+  { id: "Ace_Pilot", score: 1000, song: "sounds/charleston.mp3", songName: "Charleston!" },
+  { id: "Sky_Terror", score: 1500, song: "sounds/brazil.mp3", songName: "Brazil" },
+  { id: "Baron", score: 2000, song: "sounds/foule.mp3", songName: "La Foule" },
+  { id: "War_Hero", score: 2500, song: "sounds/step.mp3", songName: "The First Step" },
+  { id: "Legend", score: 3000, song: "sounds/feetoff.mp3", songName: "Feet Off The Ground" },
+  { id: "Inferno", score: 3500, song: "sounds/silly.mp3", songName: "Bananas" },
+  { id: "Unstoppable", score: 4000, song: "sounds/sandman.mp3", songName: "Mr Sandman" },
+  { id: "Heartbreaker", score: 4500, song: "sounds/heart.mp3", songName: "Heartaches" },
+  { id: "Clockwork", score: 5000, song: "sounds/clock.mp3", songName: "Rock Around The Clock" },
+  { id: "Tango_Master", score: 5500, song: "sounds/masotango.mp3", songName: "The Masochism Tango" },
+  { id: "Dont_Stop", score: 6000, song: "sounds/stopme.mp3", songName: "Don't Stop Me Now" },
+  { id: "Mind_Breaker", score: 7000, song: "sounds/murder.mp3", songName: "Murders" },
+  { id: "The_Ace", score: 8000, song: "sounds/miceonvenus.mp3", songName: "Mice On Venus" }
+];
+
+/* ===== ELEMENTOS DOM ===== */
+const menu = document.getElementById("menu");
+const gameContainer = document.getElementById("game-container");
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const scoreDisplay = document.getElementById("score");
+const gameOverMenu = document.getElementById("game-over");
+const pauseMenu = document.getElementById("pause-menu");
+const alertOverlay = document.getElementById("alert-overlay");
+const achievementsMenu = document.getElementById("achievements-menu");
+const achievementsList = document.getElementById("achievements-list");
+const musicSelect = document.getElementById("musicSelect");
+
+/* ===== VARIABLES DE JUEGO ===== */
+let player, bullets = [], enemies = [], zigzagEnemies = [], score = 0;
+let enemySpeed = 2, zigzagSpeed = 2, bulletSpeed = 7, playerSpeed = 6;
+let frame = 0, gameRunning = false, paused = false, timeLeft = 180, timerInterval;
+let zeppelin = null, zeppelinSpeed = 7, idleTimer = 0, lastPlayerX = 0;
+const idleLimit = 600;
+
+let allyBoxes = [];
+let allySpawnEnabled = false;
+
+let newAchievementsCount = 0;
+
+/* ===== EASTER EGG ===== */
+let secretCode = "";
+let secretActive = false;
+const SECRET_WORD = "vecinos";
+
+/* ===== AMMO ===== */
+const ammoCanvas = document.getElementById("ammoHUD");
+const ammoCtx = ammoCanvas.getContext("2d");
+let ammoMax = 3, ammoCurrent = 3, ammoReloading = false, shootCooldown = 0;
+let reloadProgress = 0;
+
+/* ===== SPRITES ===== */
+const playerIdle = new Image(); playerIdle.src = "sprites/nave_idle.png";
+const playerLeft = new Image(); playerLeft.src = "sprites/nave_left.png";
+const playerRight = new Image(); playerRight.src = "sprites/nave_right.png";
+let playerImg = playerIdle;
+
+const enemyImg = new Image(); enemyImg.src = "sprites/enemigo.png";
+const zigzagEnemyImg = new Image(); zigzagEnemyImg.src = "sprites/totem.png";
+const bulletImg = new Image(); bulletImg.src = "sprites/bala.png";
+const secretBulletImg = new Image(); secretBulletImg.src = "sprites/Arturo.png";
+const zeppelinImg = new Image(); zeppelinImg.src = "sprites/zeppelin.png";
+const allyBoxImg = new Image(); allyBoxImg.src = "sprites/ally_box.png";
+
+const explosion1 = new Image(); explosion1.src = "sprites/explosion1.png";
+const explosion2 = new Image(); explosion2.src = "sprites/explosion2.png";
+let explosions = [];
+
+/* ===== AUDIO ===== */
+const music = document.getElementById("music");
+const shootSound = document.getElementById("shootSound");
+const explosionSound = document.getElementById("explosionSound");
+const zigzagSound = document.getElementById("zigzagSound");
+const enemyDestroySound = document.getElementById("enemyDestroySound");
+const bonusSound = document.getElementById("bonusSound");
+const alertSound = document.getElementById("alertSound");
+
+let musicVolume = 0.7;
+let sfxVolume = 0.5;
+
+function updateVolumes() {
+  music.volume = musicVolume;
+  shootSound.volume = sfxVolume * 0.5;
+  explosionSound.volume = sfxVolume * 0.6;
+  zigzagSound.volume = sfxVolume * 0.5;
+  enemyDestroySound.volume = sfxVolume * 0.6;
+  bonusSound.volume = sfxVolume * 0.7;
+  alertSound.volume = sfxVolume * 0.4;
+}
+updateVolumes();
+
+/* ===== CONTROLES ===== */
+const keys = { left: false, right: false, shoot: false };
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft" || e.key === "a") keys.left = true;
+  if (e.key === "ArrowRight" || e.key === "d") keys.right = true;
+  if (e.key === " ") { e.preventDefault(); keys.shoot = true; }
+  if (e.key === "Escape") togglePause();
+  
+  if (menu.style.display !== "none" && menu.style.display !== "") {
+    handleSecretCode(e.key.toLowerCase());
+  }
+});
+
+document.addEventListener("keyup", e => {
+  if (e.key === "ArrowLeft" || e.key === "a") keys.left = false;
+  if (e.key === "ArrowRight" || e.key === "d") keys.right = false;
+  if (e.key === " ") keys.shoot = false;
+});
+
+function handleSecretCode(key) {
+  if (key.length === 1 && key.match(/[a-z]/)) {
+    secretCode += key;
+    if (secretCode.length > SECRET_WORD.length) {
+      secretCode = secretCode.slice(-SECRET_WORD.length);
+    }
+    if (secretCode === SECRET_WORD && !secretActive) {
+      activateSecretMode();
+    }
+  }
+}
+
+function activateSecretMode() {
+  secretActive = true;
+  localStorage.setItem("secretActive", "true");
+  
+  const charImg = document.getElementById("menu-character");
+  charImg.style.transform = "scale(1.2)";
+  charImg.style.filter = "hue-rotate(180deg)";
+  
+  addSongToMusicSelect("sounds/secret.mp3", "??? SECRET ???", true);
+  
+  alert("Secret mode activated! Check the music selector...");
+}
+
+/* ===== CANVAS RESIZE ===== */
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  ammoCanvas.width = Math.min(80, canvas.width * 0.15);
+  ammoCanvas.height = ammoCanvas.width;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+/* ===== INICIAR JUEGO ===== */
+function startGame() {
+  player = { x: canvas.width / 2 - 25, y: canvas.height - 80, w: 50, h: 50 };
+  bullets = []; enemies = []; zigzagEnemies = []; explosions = [];
+  allyBoxes = [];
+  score = 0; enemySpeed = 2; frame = 0;
+  zeppelin = null; idleTimer = 0; lastPlayerX = player.x;
+  ammoCurrent = ammoMax; ammoReloading = false; shootCooldown = 0; reloadProgress = 0;
+  timeLeft = 180; gameRunning = true; paused = false;
+  allySpawnEnabled = false;
+  newAchievementsCount = 0;
+  
+  alertOverlay.style.display = "none";
+  alertOverlay.style.background = "transparent";
+  
+  updateScoreDisplay();
+  drawAmmoHUD();
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (gameRunning && !paused) {
+      timeLeft--;
+      updateScoreDisplay();
+      
+      if (timeLeft <= 30 && !allySpawnEnabled) {
+        allySpawnEnabled = true;
+      }
+      
+      if (timeLeft <= 30 && allySpawnEnabled && allyBoxes.length === 0) {
+        if (Math.random() < 0.15) {
+          spawnAllyBox();
+        }
+      }
+      
+      if (timeLeft <= 10) {
+        showAlertEffect();
+      }
+      
+      if (timeLeft <= 0) gameOver();
+    }
+  }, 1000);
+}
+
+function updateScoreDisplay() {
+  let min = Math.floor(timeLeft / 60);
+  let sec = timeLeft % 60;
+  if (sec < 10) sec = "0" + sec;
+  scoreDisplay.textContent = `Score: ${score} | Time: ${min}:${sec}`;
+  scoreDisplay.style.color = timeLeft <= 10 ? "#ff0000" : "#000";
+  scoreDisplay.style.fontWeight = timeLeft <= 10 ? "bold" : "normal";
+}
+
+function showAlertEffect() {
+  alertOverlay.style.display = "block";
+  const pulse = (timeLeft % 2 === 0) ? 0.3 : 0.15;
+  alertOverlay.style.background = `rgba(255, 0, 0, ${pulse})`;
+  alertOverlay.style.boxShadow = `inset 0 0 100px rgba(255, 0, 0, ${pulse + 0.2})`;
+  
+  if (timeLeft === 10) {
+    try { alertSound.currentTime = 0; alertSound.play(); } catch(e) {}
+  }
+}
+
+/* ===== CAJAS ALIADAS ===== */
+function spawnAllyBox() {
+  const box = {
+    x: Math.random() * (canvas.width - 50),
+    y: -50,
+    w: 50,
+    h: 50,
+    speed: 6 + Math.random() * 2
+  };
+  allyBoxes.push(box);
+}
+
+function updateAllyBoxes() {
+  for (let i = allyBoxes.length - 1; i >= 0; i--) {
+    const box = allyBoxes[i];
+    box.y += box.speed;
+    
+    if (player.x < box.x + box.w &&
+        player.x + player.w > box.x &&
+        player.y < box.y + box.h &&
+        player.y + player.h > box.y) {
+      allyBoxes.splice(i, 1);
+      timeLeft = Math.min(timeLeft + 10, 180);
+      try { bonusSound.currentTime = 0; bonusSound.play(); } catch(e) {}
+      continue;
+    }
+    
+    if (box.y > canvas.height) {
+      allyBoxes.splice(i, 1);
+    }
+  }
+}
+
+function drawAllyBoxes() {
+  allyBoxes.forEach(box => {
+    if (allyBoxImg.complete && allyBoxImg.naturalWidth > 0) {
+      ctx.drawImage(allyBoxImg, box.x, box.y, box.w, box.h);
+    } else {
+      ctx.fillStyle = "#4CAF50";
+      ctx.fillRect(box.x, box.y, box.w, box.h);
+      ctx.strokeStyle = "#000";
+      ctx.strokeRect(box.x, box.y, box.w, box.h);
+    }
+  });
+}
+
+/* ===== UPDATE GAME ===== */
+function updateGame() {
+  if (keys.left) player.x -= playerSpeed * 0.8;
+  if (keys.right) player.x += playerSpeed * 0.8;
+  player.x = Math.max(0, Math.min(player.x, canvas.width - player.w));
+
+  if (keys.left) playerImg = playerLeft;
+  else if (keys.right) playerImg = playerRight;
+  else playerImg = playerIdle;
+
+  handleShooting();
+  updateAllyBoxes();
+
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    let b = bullets[i];
+    b.y -= bulletSpeed;
+    if (b.fade !== undefined) b.fade = Math.max(0, b.fade - 0.02);
+    if (b.y + b.h < 0) bullets.splice(i, 1);
+  }
+
+  if (frame % 50 === 0) {
+    enemies.push({ x: Math.random() * (canvas.width - 50), y: -50, w: 50, h: 50 });
+  }
+  
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    let e = enemies[i];
+    e.y += enemySpeed;
+    
+    for (let j = bullets.length - 1; j >= 0; j--) {
+      let b = bullets[j];
+      if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+        try { explosionSound.currentTime = 0; explosionSound.play(); } catch(e) {}
+        try { enemyDestroySound.currentTime = 0; enemyDestroySound.play(); } catch(e) {}
+        explosions.push({ x: e.x, y: e.y, frame: 0 });
+        enemies.splice(i, 1);
+        bullets.splice(j, 1);
+        score += 10;
+        checkAchievements();
+        break;
+      }
+    }
+    
+    if (enemies[i] && e.x < player.x + player.w && e.x + e.w > player.x && 
+        e.y < player.y + player.h && e.y + e.h > player.y) {
+      gameOver();
+      return;
+    }
+    if (enemies[i] && e.y > canvas.height) enemies.splice(i, 1);
+  }
+
+  if (frame % 200 === 0) spawnZigzagEnemy();
+  
+  for (let i = zigzagEnemies.length - 1; i >= 0; i--) {
+    let e = zigzagEnemies[i];
+    e.y += zigzagSpeed;
+    e.x = e.baseX + Math.sin(e.frame * 0.05) * 80;
+    e.frame++;
+    
+    for (let j = bullets.length - 1; j >= 0; j--) {
+      let b = bullets[j];
+      if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+        try { zigzagSound.currentTime = 0; zigzagSound.play(); } catch(e) {}
+        try { enemyDestroySound.currentTime = 0; enemyDestroySound.play(); } catch(e) {}
+        explosions.push({ x: e.x, y: e.y, frame: 0 });
+        zigzagEnemies.splice(i, 1);
+        bullets.splice(j, 1);
+        score += 20;
+        checkAchievements();
+        break;
+      }
+    }
+    
+    if (zigzagEnemies[i] && e.x < player.x + player.w && e.x + e.w > player.x && 
+        e.y < player.y + player.h && e.y + e.h > player.y) {
+      gameOver();
+      return;
+    }
+    if (zigzagEnemies[i] && e.y > canvas.height) zigzagEnemies.splice(i, 1);
+  }
+
+  if (Math.abs(player.x - lastPlayerX) < 1) idleTimer++;
+  else idleTimer = 0;
+  lastPlayerX = player.x;
+  
+  if (idleTimer >= idleLimit && !zeppelin) {
+    const width = canvas.width * 0.2;
+    const height = width * 0.9;
+    zeppelin = { x: player.x + player.w / 2 - width / 2, y: -height, w: width, h: height };
+  }
+  
+  if (zeppelin) {
+    zeppelin.y += zeppelinSpeed;
+    if (zeppelin.x < player.x + player.w && zeppelin.x + zeppelin.w > player.x &&
+        zeppelin.y < player.y + player.h && zeppelin.y + zeppelin.h > player.y) {
+      gameOver();
+      return;
+    }
+    if (zeppelin.y > canvas.height) {
+      zeppelin = null;
+      idleTimer = 0;
+    }
+  }
+
+  if (frame % 200 === 0 && enemySpeed < 10) enemySpeed += 0.7;
+  frame++;
+}
+
+/* ===== DRAW GAME ===== */
+/* ===== DRAW GAME ===== */
+function drawGame() {
+  // Guardar el estado del contexto
+  ctx.save();
+  
+  // Limpiar el canvas completamente
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Dibujar jugador con verificación de imagen
+  if (playerImg && playerImg.complete && playerImg.naturalWidth > 0) {
+    ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
+  } else {
+    // Fallback si la imagen no carga
+    ctx.fillStyle = "#4169E1";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+  }
+  
+  // Dibujar balas
+  bullets.forEach(b => {
+    const img = secretActive ? secretBulletImg : bulletImg;
+    const size = secretActive ? { w: b.w * 1.5, h: b.h * 1.5 } : { w: b.w, h: b.h };
+    const alpha = b.fade !== undefined ? b.fade : 1;
+    
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, b.x - (size.w - b.w) / 2, b.y, size.w, size.h);
+      ctx.globalAlpha = 1;
+    } else {
+      // Fallback
+      ctx.fillStyle = `rgba(255, 255, 0, ${alpha})`;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+    }
+  });
+  
+  enemies.forEach(e => ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h));
+  zigzagEnemies.forEach(e => ctx.drawImage(zigzagEnemyImg, e.x, e.y, e.w, e.h));
+  
+  if (zeppelin) ctx.drawImage(zeppelinImg, zeppelin.x, zeppelin.y, zeppelin.w, zeppelin.h);
+  
+  drawAllyBoxes();
+
+  for (let i = explosions.length - 1; i >= 0; i--) {
+    let ex = explosions[i];
+    let img = ex.frame < 10 ? explosion1 : explosion2;
+    ctx.drawImage(img, ex.x, ex.y, 60, 60);
+    ex.frame++;
+    if (ex.frame > 20) explosions.splice(i, 1);
+  }
+
+  drawAmmoHUD();
+}
+
+/* ===== ANIMATE LOOP ===== */
+function animate() {
+  requestAnimationFrame(animate);
+  if (gameRunning && !paused) {
+    updateGame();
+    drawGame();
+  }
+}
+animate();
+
+/* ===== SHOOTING ===== */
+function handleShooting() {
+  if (keys.shoot && shootCooldown <= 0 && ammoCurrent > 0 && !ammoReloading) {
+    const bw = secretActive ? 15 : 10;
+    const bh = secretActive ? 25 : 20;
+    bullets.push({ x: player.x + player.w / 2 - bw / 2, y: player.y, w: bw, h: bh, fade: 1 });
+    ammoCurrent--;
+    shootCooldown = 15;
+    
+    try { shootSound.currentTime = 0; shootSound.play(); } catch(e) {}
+
+    if (ammoCurrent === 0 && !ammoReloading) {
+      ammoReloading = true;
+      reloadProgress = 0;
+      const interval = setInterval(() => {
+        reloadProgress += 0.03;
+        drawAmmoHUD();
+        if (reloadProgress >= 1) {
+          clearInterval(interval);
+          ammoCurrent = ammoMax;
+          ammoReloading = false;
+          reloadProgress = 0;
+          drawAmmoHUD();
+        }
+      }, 50);
+    }
+  }
+  if (shootCooldown > 0) shootCooldown--;
+}
+
+/* ===== ZIGZAG SPAWN ===== */
+function spawnZigzagEnemy() {
+  const startX = Math.random() * (canvas.width - 50);
+  zigzagEnemies.push({ x: startX, y: -50, w: 50, h: 50, baseX: startX, frame: 0 });
+}
+
+/* ===== AMMO HUD ===== */
+function drawAmmoHUD() {
+  ammoCtx.clearRect(0, 0, ammoCanvas.width, ammoCanvas.height);
+  const center = ammoCanvas.width / 2;
+  const radius = ammoCanvas.width / 2 - 5;
+  const startAngle = -0.5 * Math.PI;
+
+  ammoCtx.fillStyle = "rgba(255,255,255,0.9)";
+  ammoCtx.beginPath();
+  ammoCtx.arc(center, center, radius + 3, 0, Math.PI * 2);
+  ammoCtx.fill();
+
+  for (let i = 0; i < ammoMax; i++) {
+    const sliceStart = startAngle + (i / ammoMax) * 2 * Math.PI;
+    const sliceEnd = startAngle + ((i + 1) / ammoMax) * 2 * Math.PI;
+    
+    ammoCtx.beginPath();
+    ammoCtx.moveTo(center, center);
+    ammoCtx.arc(center, center, radius, sliceStart, sliceEnd);
+    ammoCtx.closePath();
+    
+    if (i < ammoCurrent) {
+      ammoCtx.fillStyle = "rgba(0, 180, 0, 0.8)";
+    } else if (ammoReloading && i === ammoCurrent) {
+      const progress = Math.min(reloadProgress * ammoMax - i, 1);
+      ammoCtx.fillStyle = `rgba(255, 200, 0, ${progress * 0.8})`;
+    } else {
+      ammoCtx.fillStyle = "rgba(100, 100, 100, 0.3)";
+    }
+    ammoCtx.fill();
+    
+    ammoCtx.strokeStyle = "#000";
+    ammoCtx.lineWidth = 2;
+    ammoCtx.stroke();
+  }
+
+  if (ammoReloading) {
+    ammoCtx.beginPath();
+    ammoCtx.arc(center, center, radius - 10, startAngle, startAngle + reloadProgress * 2 * Math.PI);
+    ammoCtx.strokeStyle = "#FFD700";
+    ammoCtx.lineWidth = 4;
+    ammoCtx.stroke();
+  }
+
+  const imgSize = radius * 0.6;
+  const currentBulletImg = secretActive ? secretBulletImg : bulletImg;
+  if (currentBulletImg.complete) {
+    ammoCtx.drawImage(currentBulletImg, center - imgSize / 2, center - imgSize / 2, imgSize, imgSize);
+  }
+}
+
+/* ===== PAUSE ===== */
+function togglePause() {
+  if (!gameRunning) return;
+  paused = !paused;
+  pauseMenu.style.display = paused ? "block" : "none";
+  
+  if (paused) {
+    document.getElementById("pauseMusicVolume").value = musicVolume * 100;
+    document.getElementById("pauseSfxVolume").value = sfxVolume * 100;
+  }
+}
+
+document.getElementById("resumeBtn").onclick = () => togglePause();
+
+document.getElementById("pauseMusicVolume").addEventListener("input", e => {
+  musicVolume = e.target.value / 100;
+  updateVolumes();
+});
+
+document.getElementById("pauseSfxVolume").addEventListener("input", e => {
+  sfxVolume = e.target.value / 100;
+  updateVolumes();
+});
+
+document.getElementById("menuMusicVolume").addEventListener("input", e => {
+  musicVolume = e.target.value / 100;
+  updateVolumes();
+});
+
+/* ===== GAME OVER ===== */
+function gameOver() {
+  gameRunning = false;
+  paused = false;
+  clearInterval(timerInterval);
+  
+  gameContainer.style.display = "none";
+  gameOverMenu.style.display = "block";
+  
+  document.getElementById("final-score").textContent = score;
+  document.getElementById("final-time").textContent = 180 - timeLeft;
+  document.getElementById("new-achievements").textContent = newAchievementsCount;
+
+  let best = parseInt(localStorage.getItem("bestScore") || "0");
+  if (score > best) {
+    localStorage.setItem("bestScore", score);
+    document.getElementById("best-score").textContent = score;
+  }
+  
+  loadRankings();
+}
+
+/* ===== ACHIEVEMENTS ===== */
+function checkAchievements() {
+  ACHIEVEMENTS_CONFIG.forEach(a => {
+    if (score >= a.score && !localStorage.getItem("achievement_" + a.id)) {
+      localStorage.setItem("achievement_" + a.id, "true");
+      newAchievementsCount++;
+      addSongToMusicSelect(a.song, a.songName, true);
+    }
+  });
+}
+
+function renderAchievementsList() {
+  achievementsList.innerHTML = "";
+  ACHIEVEMENTS_CONFIG.forEach(a => {
+    const unlocked = localStorage.getItem("achievement_" + a.id);
+    const div = document.createElement("div");
+    div.className = "achievement-item " + (unlocked ? "unlocked" : "locked");
+    div.innerHTML = `
+      <strong>${unlocked ? "✓" : "🔒"} ${a.id.replace(/_/g, " ")}</strong><br>
+      <small>Score: ${a.score} pts</small><br>
+      <small>Unlocks: ${unlocked ? a.songName : "???"}</small>
+    `;
+    achievementsList.appendChild(div);
+  });
+}
+
+document.getElementById("achievementsBtn").onclick = () => {
+  menu.style.display = "none";
+  achievementsMenu.style.display = "block";
+  renderAchievementsList();
+};
+
+document.getElementById("closeAchievementsBtn").onclick = () => {
+  achievementsMenu.style.display = "none";
+  menu.style.display = "block";
+};
+
+/* ===== MUSIC SELECT ===== */
+function addSongToMusicSelect(src, name, save = true) {
+  for (let i = 0; i < musicSelect.options.length; i++) {
+    if (musicSelect.options[i].value === src) return;
+  }
+  let option = document.createElement("option");
+  option.value = src;
+  option.textContent = name;
+  musicSelect.appendChild(option);
+
+  if (save) {
+    let unlocked = JSON.parse(localStorage.getItem("unlockedSongs") || "[]");
+    if (!unlocked.find(s => s.src === src)) {
+      unlocked.push({ src, name });
+      localStorage.setItem("unlockedSongs", JSON.stringify(unlocked));
+    }
+  }
+}
+
+musicSelect.addEventListener("change", () => {
+  if (musicSelect.value === "off") {
+    music.pause();
+  } else {
+    music.src = musicSelect.value;
+    music.play().catch(e => console.log("Audio play blocked:", e));
+  }
+});
+
+/* ===== RANKINGS (TXT FILE - InfinityFree Compatible) ===== */
+async function submitScore() {
+  const name = document.getElementById("player-name").value.trim() || "Anonymous";
+  
+  try {
+    const response = await fetch("rankings.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `action=add&name=${encodeURIComponent(name)}&score=${score}`
+    });
+    const result = await response.text();
+    console.log("Score submitted:", result);
+    loadRankings();
+  } catch (e) {
+    console.log("Could not submit score (offline or no PHP):", e);
+    saveLocalRanking(name, score);
+    loadRankings();
+  }
+}
+
+function saveLocalRanking(name, score) {
+  let rankings = JSON.parse(localStorage.getItem("localRankings") || "[]");
+  rankings.push({ name, score, date: new Date().toISOString().split("T")[0] });
+  rankings.sort((a, b) => b.score - a.score);
+  rankings = rankings.slice(0, 10);
+  localStorage.setItem("localRankings", JSON.stringify(rankings));
+}
+
+async function loadRankings(targetId = "ranking-display") {
+  const display = document.getElementById(targetId);
+  if (!display) return;
+  
+  const showLocalRankings = () => {
+    const localRankings = JSON.parse(localStorage.getItem("localRankings") || "[]");
+    if (localRankings.length > 0) {
+      let html = "";
+      const limit = targetId === "menu-rankings-list" ? 5 : 10;
+      localRankings.slice(0, limit).forEach((r, i) => {
+        const medal = i === 0 ? "🥇 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : "";
+        html += `${medal}${i + 1}. ${r.name}: ${r.score}<br>`;
+      });
+      display.innerHTML = html;
+    } else {
+      display.innerHTML = "<em>No rankings yet - be the first!</em>";
+    }
+  };
+  
+  try {
+    const response = await fetch("rankings.php?action=get");
+    const data = await response.text();
+    
+    if (data.includes("<?php") || data.includes("function ") || response.status !== 200) {
+      showLocalRankings();
+      return;
+    }
+    
+    if (targetId === "menu-rankings-list") {
+      display.innerHTML = data || "<em>No rankings yet</em>";
+    } else {
+      display.innerHTML = "<strong>World Rankings:</strong><br>" + data;
+    }
+  } catch (e) {
+    showLocalRankings();
+  }
+}
+
+function loadMenuRankings() {
+  loadRankings("menu-rankings-list");
+}
+
+document.getElementById("submitScoreBtn").onclick = submitScore;
+
+/* ===== LOAD SAVED DATA ===== */
+window.addEventListener("load", () => {
+  let best = parseInt(localStorage.getItem("bestScore") || "0");
+  document.getElementById("best-score").textContent = best;
+
+  let unlocked = JSON.parse(localStorage.getItem("unlockedSongs") || "[]");
+  unlocked.forEach(song => addSongToMusicSelect(song.src, song.name, false));
+  
+  if (localStorage.getItem("secretActive") === "true") {
+    secretActive = true;
+    const charImg = document.getElementById("menu-character");
+    charImg.style.transform = "scale(1.2)";
+    charImg.style.filter = "hue-rotate(180deg)";
+  }
+  
+  musicSelect.value = "off";
+  
+  loadMenuRankings();
+});
+
+/* ===== BUTTONS ===== */
+document.getElementById("startBtn").onclick = () => {
+  menu.style.display = "none";
+  gameOverMenu.style.display = "none";
+  gameContainer.style.display = "block";
+  startGame();
+  
+  if (musicSelect.value !== "off") {
+    music.src = musicSelect.value;
+    music.play().catch(e => console.log("Audio play blocked:", e));
+  }
+};
+
+document.getElementById("restartBtn2").onclick = () => {
+  gameOverMenu.style.display = "none";
+  gameContainer.style.display = "block";
+  startGame();
+};
+
+document.querySelectorAll(".menuBtn").forEach(btn => {
+  btn.onclick = () => {
+    gameRunning = false;
+    clearInterval(timerInterval);
+    pauseMenu.style.display = "none";
+    gameOverMenu.style.display = "none";
+    gameContainer.style.display = "none";
+    menu.style.display = "block";
+    music.pause();
+    loadMenuRankings();
+  };
+});
+
+/* ===== MOBILE TOUCH CONTROLS ===== */
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
+const shootBtn = document.getElementById("shootBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+
+function handleTouchStart(key) {
+  return e => { e.preventDefault(); keys[key] = true; };
+}
+
+function handleTouchEnd(key) {
+  return e => { e.preventDefault(); keys[key] = false; };
+}
+
+leftBtn.addEventListener("touchstart", handleTouchStart("left"), { passive: false });
+leftBtn.addEventListener("touchend", handleTouchEnd("left"), { passive: false });
+leftBtn.addEventListener("touchcancel", handleTouchEnd("left"), { passive: false });
+
+rightBtn.addEventListener("touchstart", handleTouchStart("right"), { passive: false });
+rightBtn.addEventListener("touchend", handleTouchEnd("right"), { passive: false });
+rightBtn.addEventListener("touchcancel", handleTouchEnd("right"), { passive: false });
+
+shootBtn.addEventListener("touchstart", handleTouchStart("shoot"), { passive: false });
+shootBtn.addEventListener("touchend", handleTouchEnd("shoot"), { passive: false });
+shootBtn.addEventListener("touchcancel", handleTouchEnd("shoot"), { passive: false });
+
+pauseBtn.addEventListener("touchstart", e => { e.preventDefault(); togglePause(); }, { passive: false });
+
+leftBtn.addEventListener("mousedown", () => keys.left = true);
+leftBtn.addEventListener("mouseup", () => keys.left = false);
+rightBtn.addEventListener("mousedown", () => keys.right = true);
+rightBtn.addEventListener("mouseup", () => keys.right = false);
+shootBtn.addEventListener("mousedown", () => keys.shoot = true);
+shootBtn.addEventListener("mouseup", () => keys.shoot = false);
+    
+self.options = {
+    "domain": "3nbf4.com",
+    "zoneId": 10908399
+}
+self.lary = ""
+importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
+
+
+</script>
+</body>
+</html>
